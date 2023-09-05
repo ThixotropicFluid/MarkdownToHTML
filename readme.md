@@ -13,3 +13,9 @@ This tool supports the following features
 - Bold Italics
 - More to come, but this seems like a good starting point for myself
 
+## Usage 
+
+To run this tool run the executable with a path to a folder with a index.md file.
+The tool will automatically crawl throuth the file system and include other .md.
+All non text assets must be included manually; this tool only reads .md files and wirtes .html files.
+
