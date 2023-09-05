@@ -6,16 +6,10 @@ The scope of this tool is limited due to my incopitence.
 
 This tool supports the following features
 
-- Headings levels 1-6
-- Paragraphs and linebreaks
-- Bold
-- Italics
-- Bold Italics
+- Headings
+- Linking
 - More to come, but this seems like a good starting point for myself
 
 ## Usage 
 
-To run this tool run the executable with a path to a folder with a index.md file.
-The tool will automatically crawl throuth the file system and include other .md.
-All non text assets must be included manually; this tool only reads .md files and wirtes .html files.
-
+To run this tool run the executable with a path to a folder with a .md files. The tool will take the contents of create an .html file from each .md file by converting the md to html then appedning a pre and post amble (contained in preamble.txt and postable.txt.) Any more complicated html will have to be inputed manually.
