@@ -11,15 +11,99 @@ struct MDFile {
     contents: String,
     path: String,
 }
+#[derive(Debug, Clone)]
+enum HTMLComponent {
+    Content(String),
+    Heading(i32),
+    NewLine,
+}
 impl MDFile {
     fn to_html(&self, config: &Configuration) -> HTMLFile {
         let mut converted_text = config.preamble.to_owned();
         converted_text.push_str(&self.contents[..]);
+
+        let html_components = self.get_html_components().unwrap();
+        dbg!(html_components.clone());
         converted_text.push_str(&config.postamble[..]);
         HTMLFile {
             contents: converted_text.clone(),
             path: self.path.clone(),
         }
+    }
+    fn get_stringlets_bytes(&self) -> Result<Vec<Vec<u8>>, &str> {
+        let mut r = 0; // index of next character to read
+        let mut w = 0; // index of stringlet to write
+
+        let mut stringlets_bytes: Vec<Vec<u8>> = vec![vec![]];
+
+        while r < self.contents.len() {
+            let byte = self.contents.as_bytes().get(r).unwrap();
+            r += 1;
+            match byte {
+                0x23 => {
+                    stringlets_bytes.push(vec![0x23]);
+                    w += 1;
+                    while r < self.contents.len() {
+                        let byte = self.contents.as_bytes().get(r).unwrap();
+                        if *byte == 0x23 {
+                            r += 1;
+                            stringlets_bytes.get_mut(w).unwrap().push(0x23);
+                        } else {
+                            w += 1;
+                            stringlets_bytes.push(vec![]);
+                            break;
+                        }
+                    }
+                }
+                0x0a => {
+                    stringlets_bytes.push(vec![0x0a]);
+                    w += 1;
+                }
+                0x0d => {}
+                _ => stringlets_bytes.get_mut(w).unwrap().push(*byte),
+            }
+        }
+        Ok(stringlets_bytes)
+    }
+    fn get_html_components(&self) -> Result<Vec<HTMLComponent>, &str> {
+        let mut r = 0; // index of next character to read
+        let mut html_components: Vec<HTMLComponent> = vec![];
+
+        let mut content_string: Vec<u8> = vec![];
+        while r < self.contents.len() {
+            let byte = self.contents.as_bytes().get(r).unwrap();
+            r += 1;
+            match byte {
+                0x23 => {
+                    html_components.push(HTMLComponent::Content(
+                        String::from_utf8(content_string.clone()).unwrap(),
+                    ));
+                    content_string = vec![];
+
+                    let mut heading_level: i32 = 1;
+                    while r < self.contents.len() {
+                        let byte = self.contents.as_bytes().get(r).unwrap();
+                        if *byte == 0x23 {
+                            r += 1;
+                            heading_level += 1;
+                        } else {
+                            html_components.push(HTMLComponent::Heading(heading_level));
+                            break;
+                        }
+                    }
+                }
+                0x0a => {
+                    html_components.push(HTMLComponent::NewLine);
+                }
+                0x0d => {}
+                _ => content_string.push(*byte),
+            }
+        }
+        html_components.push(HTMLComponent::Content(
+            String::from_utf8(content_string.clone()).unwrap(),
+        ));
+
+        Ok(html_components)
     }
 }
 #[derive(Debug)]
@@ -31,6 +115,15 @@ struct HTMLFile {
 struct Configuration {
     preamble: String,
     postamble: String,
+}
+
+struct FormatState {
+    heading_level: i32,
+}
+impl Default for FormatState {
+    fn default() -> FormatState {
+        FormatState { heading_level: 0 }
+    }
 }
 
 impl HTMLFile {
