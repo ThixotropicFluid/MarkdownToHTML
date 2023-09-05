@@ -12,10 +12,10 @@ struct MDFile {
     path: String,
 }
 impl MDFile {
-    fn to_html(&self) -> HTMLFile {
-        let mut converted_text = String::from(PREAMBLE);
+    fn to_html(&self, config: &Configuration) -> HTMLFile {
+        let mut converted_text = config.preamble.to_owned();
         converted_text.push_str(&self.contents[..]);
-        converted_text.push_str(POSTAMBLE);
+        converted_text.push_str(&config.postamble[..]);
         HTMLFile {
             contents: converted_text.clone(),
             path: self.path.clone(),
@@ -28,6 +28,11 @@ struct HTMLFile {
     contents: String,
     path: String,
 }
+struct Configuration {
+    preamble: String,
+    postamble: String,
+}
+
 impl HTMLFile {
     fn save(&self) -> io::Result<()> {
         let input_path = Path::new(&self.path);
@@ -49,24 +54,16 @@ impl HTMLFile {
         Ok(())
     }
 }
-
-const PREAMBLE: &str = r#"
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>title</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
-  </head>
-    <body>
-        <p> 
-        "#;
-const POSTAMBLE: &str = r#"
-        </p>
-    </body>
-</html>
-"#;
+fn load_html_components() -> Configuration {
+    let preamble = fs::read_to_string("preamble.txt").expect("unable to load preamble.txt\n");
+    let postamble = fs::read_to_string("postamble.txt").expect("unable to load postamble.txt\n");
+    Configuration {
+        preamble,
+        postamble,
+    }
+}
+//const PREAMBLE: &str = r#"<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>title</title><link rel="stylesheet" href="style.css"><script src="script.js"></script></head><body><p>"#;
+//const POSTAMBLE: &str = r#"</p></body></html>"#;
 
 fn populate_file_structure(files: &mut Vec<MDFile>) {
     let paths = fs::read_dir("./").expect("Error reading path");
@@ -85,10 +82,10 @@ fn populate_file_structure(files: &mut Vec<MDFile>) {
         }
     }
 }
-fn convert_all_files_to_html(files: &Vec<MDFile>) -> Vec<HTMLFile> {
+fn convert_all_files_to_html(files: &Vec<MDFile>, config: &Configuration) -> Vec<HTMLFile> {
     let mut html_files: Vec<HTMLFile> = Vec::new();
     for md_file in files {
-        html_files.push(md_file.to_html());
+        html_files.push(md_file.to_html(&config));
     }
     html_files
 }
@@ -101,8 +98,9 @@ fn save_html_files(files: &Vec<HTMLFile>) {
 
 fn main() {
     let mut files: Vec<MDFile> = vec![];
+    let config = load_html_components();
     populate_file_structure(&mut files);
-    let html_files = convert_all_files_to_html(&files);
+    let html_files = convert_all_files_to_html(&files, &config);
 
     save_html_files(&html_files);
     //let test_html = md_to_html(files.get(0).unwrap());
