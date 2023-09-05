@@ -30,41 +30,6 @@ impl MDFile {
             path: self.path.clone(),
         }
     }
-    fn get_stringlets_bytes(&self) -> Result<Vec<Vec<u8>>, &str> {
-        let mut r = 0; // index of next character to read
-        let mut w = 0; // index of stringlet to write
-
-        let mut stringlets_bytes: Vec<Vec<u8>> = vec![vec![]];
-
-        while r < self.contents.len() {
-            let byte = self.contents.as_bytes().get(r).unwrap();
-            r += 1;
-            match byte {
-                0x23 => {
-                    stringlets_bytes.push(vec![0x23]);
-                    w += 1;
-                    while r < self.contents.len() {
-                        let byte = self.contents.as_bytes().get(r).unwrap();
-                        if *byte == 0x23 {
-                            r += 1;
-                            stringlets_bytes.get_mut(w).unwrap().push(0x23);
-                        } else {
-                            w += 1;
-                            stringlets_bytes.push(vec![]);
-                            break;
-                        }
-                    }
-                }
-                0x0a => {
-                    stringlets_bytes.push(vec![0x0a]);
-                    w += 1;
-                }
-                0x0d => {}
-                _ => stringlets_bytes.get_mut(w).unwrap().push(*byte),
-            }
-        }
-        Ok(stringlets_bytes)
-    }
     fn get_html_components(&self) -> Result<Vec<HTMLComponent>, &str> {
         let mut r = 0; // index of next character to read
         let mut html_components: Vec<HTMLComponent> = vec![];
