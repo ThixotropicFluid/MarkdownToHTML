@@ -1,4 +1,4 @@
-# HTML staic site generator
+# HTML static site generator
 
 This is a create designed to take .md files and convert them into HTML files.
 
