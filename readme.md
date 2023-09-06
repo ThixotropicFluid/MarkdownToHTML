@@ -21,7 +21,7 @@ To run this tool run the executable with a path to a folder with a .jaml files. 
 # .jaml syntax
 Newlines are directed 1 to 1 from the .jaml file to .html
 
-All other features use '\' as an escape key
+All other features use '\\' as an escape key
 - Headings 1-6 are suppored with hashes (\# Heading level 1)
 - Linking to external and internal pages (\[display](https://github.com))
 - Arbitrary HTML (\\{\<p\> arbitrary \<b\>HTML\</b\> content is contained here\</p\>})
