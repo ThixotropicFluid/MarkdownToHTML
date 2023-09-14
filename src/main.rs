@@ -63,6 +63,9 @@ impl<'a> MDFile {
                     push_str(&mut bytes, &format!("<a href=\"{}\">{}</a>", link, display));
                 }
                 HTMLComponent::RawHTML(code) => push_str(&mut bytes, &format!("{}", code)),
+                HTMLComponent::Image(address) => {
+                    push_str(&mut bytes, &format!(r#"<img src="{}" >"#, address))
+                }
                 _ => push_str(&mut bytes, "Error feature not implemented"),
             }
         }

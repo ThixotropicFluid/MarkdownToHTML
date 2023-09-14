@@ -22,5 +22,7 @@ To run this tool run the executable with a path to a folder with a .jaml files. 
 Newlines are directed 1 to 1 from the .jaml file to .html
 
 All other features use '\\' as an escape key
-- \\h[RAW HTML]
-- \\i[IMAGEADRESS]
+- Raw html: \\h[RAW HTML]
+- Image: \\i[IMAGE ADDRESS]
+- Heading level 1-6: \\1-6
+- Link: \\l[DISPLAY NAME][ADDRESS]
