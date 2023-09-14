@@ -1,6 +1,6 @@
 # HTML static site generator
 
-This is a create designed to take .md files and convert them into HTML files.
+This is a create designed to take .jamf files and convert them into HTML files.
 
 The scope of this tool is limited due to my incopitence.
 
@@ -9,7 +9,6 @@ This tool supports the following features
 - Headings
 - Linking
 - Arbtary HTML injection
-- More to come, but this seems like a good starting point for myself
 
 # Usage 
 To create the executable
