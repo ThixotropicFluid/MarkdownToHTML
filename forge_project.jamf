@@ -1,0 +1,10 @@
+\1 Forge V1
+Recently I have been working on a propane backyard forge. I am doing this as a hobby, and I wanted to document some of the effort that it took to make this project.
+\2 Initial Desing
+\3 Propane Burner
+\h[This is CONTENT]
+The first design I attempted to create was built using a dual venturi burner setup using \l[this][https://www.instructables.com/how-to-build-a-gas-forge-burner/] as the main resource for my design. My first burner differed in a few ways: I had two burners, which could be run in either one or two-burner mode using a valve, and my gas was fed through the top.
+\3 Main fuselage
+The main fuselage of the forge is made of a propane tank and various pieces of scrap metal. The forge is lined with 2 layers of 2" kaowool, and coated with a refractory cement (refractory cement turned out to be the incorrect material for this job.) The burner ports are made of two 2" scrap pieces of tube stock.
+
+Due to a head loss problem, I added doors to the front and rear of the forge. This modification dramatically improved the efficiency of my forge; I was not able to get efficiency measurements but I suspect the efficiency improvement was in the range of 100%-200%. In addition, I added a small platform to the from of the forge for resting objects.

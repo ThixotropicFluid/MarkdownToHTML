@@ -18,6 +18,7 @@ enum HTMLComponent {
     NewLine,
     Link(String, String), // (Display, Hyperlink)
     RawHTML(String),
+    Image(String),
 }
 struct FormatState {
     heading_level: i32,
@@ -27,7 +28,7 @@ impl Default for FormatState {
         FormatState { heading_level: 0 }
     }
 }
-impl MDFile {
+impl<'a> MDFile {
     fn to_html(&self, config: &Configuration) -> HTMLFile {
         let mut converted_text = String::from("");
 
@@ -41,7 +42,7 @@ impl MDFile {
     }
     #[allow(unreachable_patterns)]
     fn get_html(&self) -> String {
-        let html_components = self.get_html_components().unwrap();
+        let html_components = self.get_html_components_iter().unwrap();
         let mut bytes: Vec<u8> = vec![];
         let mut state = FormatState::default();
         for html_component in html_components {
@@ -67,7 +68,95 @@ impl MDFile {
         }
         String::from_utf8(bytes).unwrap()
     }
+    fn get_html_components_iter(&self) -> Result<Vec<HTMLComponent>, &str> {
+        let content = self.contents.clone();
+        let mut content_bytes = content.as_bytes().iter();
+        let mut html_components: Vec<HTMLComponent> = vec![];
+        let mut content_string: Vec<u8> = vec![];
+        while let Some(mut byte) = content_bytes.next() {
+            match byte {
+                0x0a => {
+                    // \n
+                    html_components.push(HTMLComponent::Content(
+                        String::from_utf8(content_string.clone()).unwrap(),
+                    ));
+                    content_string = vec![];
+                    html_components.push(HTMLComponent::NewLine);
+                }
+                0x0d => {} // \r
+                0x5c => {
+                    html_components.push(HTMLComponent::Content(
+                        String::from_utf8(content_string.clone()).unwrap(),
+                    ));
+                    content_string = vec![];
+                    byte = match content_bytes.next() {
+                        None => break,
+                        Some(x) => x,
+                    }; // get next byte in squence after '\'
 
+                    match byte {
+                        0x5c => content_string.push(0x5c),
+                        0x68 => {
+                            let data = String::from_utf8(
+                                Self::get_bracket_internal(&mut content_bytes).unwrap(),
+                            )
+                            .unwrap();
+                            html_components.push(HTMLComponent::RawHTML(data));
+                        } // h for html
+                        0x69 => {
+                            let data = String::from_utf8(
+                                Self::get_bracket_internal(&mut content_bytes).unwrap(),
+                            )
+                            .unwrap();
+                            html_components.push(HTMLComponent::Image(data));
+                        } // i for image
+                        0x6c => {
+                            let display = String::from_utf8(
+                                Self::get_bracket_internal(&mut content_bytes).unwrap(),
+                            )
+                            .unwrap();
+                            let hyperlink = String::from_utf8(
+                                Self::get_bracket_internal(&mut content_bytes).unwrap(),
+                            )
+                            .unwrap();
+
+                            html_components.push(HTMLComponent::Link(display, hyperlink));
+                        } // l for link
+                        0x31..=0x36 => {
+                            html_components.push(HTMLComponent::Heading((byte - 0x30) as i32));
+                        } // 1-6 for heading
+                        _ => {} // do nothing bad exit character
+                    }; // defines what exit characters do what
+                }
+                _ => content_string.push(*byte),
+            };
+        }
+        html_components.push(HTMLComponent::Content(
+            String::from_utf8(content_string.clone()).unwrap(),
+        ));
+        html_components.push(HTMLComponent::NewLine);
+
+        Ok(html_components)
+    }
+    fn get_bracket_internal<T: Iterator<Item = &'a u8>>(conent_iter: &mut T) -> Option<Vec<u8>> {
+        let mut bytes: Vec<u8> = vec![];
+        if let Some(byte) = conent_iter.next() {
+            if *byte != 0x5b as u8 {
+                return None;
+            }
+        } else {
+            return None;
+        }
+        while let Some(byte) = conent_iter.next() {
+            match byte {
+                0x5d => {
+                    break;
+                }
+                _ => bytes.push(*byte),
+            };
+        }
+        Some(bytes)
+    } // gets text up untill '\'
     fn get_html_components(&self) -> Result<Vec<HTMLComponent>, &str> {
         let mut r = 0; // index of next character to read
         let mut html_components: Vec<HTMLComponent> = vec![];
@@ -86,14 +175,16 @@ impl MDFile {
              */
             match byte {
                 0x0a => {
+                    // \n
                     html_components.push(HTMLComponent::Content(
                         String::from_utf8(content_string.clone()).unwrap(),
                     ));
                     content_string = vec![];
                     html_components.push(HTMLComponent::NewLine);
                 }
-                0x0d => {}
+                0x0d => {} // \r
                 0x5c => {
+                    // '\\'
                     html_components.push(HTMLComponent::Content(
                         String::from_utf8(content_string.clone()).unwrap(),
                     ));
