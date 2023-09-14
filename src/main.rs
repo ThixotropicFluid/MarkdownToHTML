@@ -18,7 +18,7 @@ enum HTMLComponent {
     NewLine,
     Link(String, String), // (Display, Hyperlink)
     RawHTML(String),
-    Image(String),
+    Image(String, i32, i32),
 }
 struct FormatState {
     heading_level: i32,
@@ -63,9 +63,13 @@ impl<'a> MDFile {
                     push_str(&mut bytes, &format!("<a href=\"{}\">{}</a>", link, display));
                 }
                 HTMLComponent::RawHTML(code) => push_str(&mut bytes, &format!("{}", code)),
-                HTMLComponent::Image(address) => {
-                    push_str(&mut bytes, &format!(r#"<img src="{}" >"#, address))
-                }
+                HTMLComponent::Image(address, width, height) => push_str(
+                    &mut bytes,
+                    &format!(
+                        r#"<img src="{}" width="{}" height="{}">"#,
+                        address, width, height
+                    ),
+                ),
                 _ => push_str(&mut bytes, "Error feature not implemented"),
             }
         }
@@ -111,7 +115,20 @@ impl<'a> MDFile {
                                 Self::get_bracket_internal(&mut content_bytes).unwrap(),
                             )
                             .unwrap();
-                            html_components.push(HTMLComponent::Image(data));
+                            let width = String::from_utf8(
+                                Self::get_bracket_internal(&mut content_bytes).unwrap(),
+                            )
+                            .unwrap()
+                            .parse::<i32>()
+                            .unwrap();
+                            let height = String::from_utf8(
+                                Self::get_bracket_internal(&mut content_bytes).unwrap(),
+                            )
+                            .unwrap()
+                            .parse::<i32>()
+                            .unwrap();
+
+                            html_components.push(HTMLComponent::Image(data, width, height));
                         } // i for image
                         0x6c => {
                             let display = String::from_utf8(
